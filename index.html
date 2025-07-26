@@ -68,16 +68,26 @@
     const noBtn = document.getElementById("noBtn");
     const response = document.getElementById("response");
 
-    const sendChoice = (choice) => {
-      fetch("https://script.google.com/macros/s/AKfycbx_pdCgUSHLm9mX3zq_rwbp5g7sKynGxgPLNcWxHoPFO-3HEZ2LjVdUZX2TTkgOB5ECZg/exec", {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ choice }),
-      });
-    };
+    function sendChoice(choice) {
+  const payload = {
+    event: 'choice',
+    sessionId: getSessionId(),
+    path: location.pathname + location.search,
+    referrer: document.referrer,
+    userAgent: navigator.userAgent,
+    extra: { choice }
+  };
+
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    mode: 'no-cors', // ✅ Bắt buộc
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+}
+
 
     let noClickCount = 0;
     const noTexts = [
