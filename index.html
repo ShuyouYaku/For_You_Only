@@ -9,7 +9,12 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
       background-color: #fff0f5;
-      margin-top: 50px;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
     }
 
     .btn {
@@ -114,5 +119,53 @@
       }
     });
   </script>
+
+<script>
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzB3U2BUrjVB3twfjY0LRLno5Wl1ljqo02youRDsuY0SEhIBXprTF_ics0GQd4lrdOnlQ/exec';
+
+  function getSessionId() {
+    let id = localStorage.getItem('sid');
+    if (!id) {
+      id = (crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).slice(2);
+      localStorage.setItem('sid', id);
+    }
+    return id;
+  }
+
+  function logToSheet(event, extra = {}) {
+    const payload = {
+      event,
+      sessionId: getSessionId(),
+      path: location.pathname + location.search,
+      referrer: document.referrer,
+      userAgent: navigator.userAgent,
+      extra
+    };
+
+    if (navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      navigator.sendBeacon(WEB_APP_URL, blob);
+    } else {
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true,
+        mode: 'no-cors'
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    logToSheet('visit');
+  });
+
+  window.addEventListener('beforeunload', () => {
+    logToSheet('exit');
+  });
+
+  // Bạn có thể gọi logToSheet('choice', { choice: 'yes' }) khi bấm Yes
+</script>
+
 </body>
 </html>
