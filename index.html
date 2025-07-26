@@ -3,169 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Valentine</title>
+  <title>For You Only</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      background-color: #fff0f5;
-      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: black;
+      color: white;
       display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      margin: 0;
     }
 
-    .btn {
-      padding: 10px 20px;
+    #container {
+      text-align: center;
+    }
+
+    #question {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .button {
       font-size: 20px;
+      padding: 10px 20px;
       margin: 10px;
-      cursor: pointer;
-      border: none;
+      background-color: black;
+      color: white;
+      border: 2px solid white;
       border-radius: 5px;
+      cursor: pointer;
       transition: transform 0.3s ease;
     }
 
-    #yesBtn {
-      background-color: #ff69b4;
-      color: white;
-      transition: transform 0.3s ease-in-out;
+    .button:hover {
+      transform: scale(1.1);
     }
 
-    #noBtn {
-      background-color: #ff4c4c;
-      color: white;
-    }
-
-    #response {
-      display: none;
-      margin-top: 10px;
-      font-size: 24px;
-      color: red;
+    #gif {
+      margin-top: 30px;
+      max-width: 90vw;
+      max-height: 60vh;
     }
   </style>
 </head>
 <body>
-  <h1>Do you want to be my Valentine?</h1>
-  <div id="buttons">
-    <button id="yesBtn" class="btn">Yes</button>
-    <button id="noBtn" class="btn">No</button>
-  </div>
-
-  <img id="cat" src="https://media.tenor.com/1q_L03jDdJYAAAAC/cute-cat.gif" alt="Cat Gif" width="200" />
-
-  <!-- GIFs -->
-  <img id="defaultGif" src="default.gif" alt="default gif" style="margin-top: 20px; width: 250px;" />
-  <img id="yesGif" src="yes.gif" alt="yes gif" style="margin-top: 20px; width: 300px; display: none;" />
-
-  <div id="response">
-    <h2>Knew you would say yes 💖</h2>
+  <div id="container">
+    <div id="question">Do you still think of me?</div>
+    <button class="button" id="yesBtn">Yes</button>
+    <button class="button" id="noBtn">No</button>
+    <img id="gif" src="gift_default.gif" alt="gif" />
   </div>
 
   <script>
-    const yesBtn = document.getElementById("yesBtn");
-    const noBtn = document.getElementById("noBtn");
-    const response = document.getElementById("response");
-
-    const sendChoice = (choice) => {
-      fetch("https://script.google.com/macros/s/AKfycbyqTRpy8sRfaHbyMJgshn6CxoRNE_uz9nlpxIQ6NtZEc2JDsnYfkzxKGED8L97xIMIS4w/exec", {
+    // Gửi thông tin vào Google Sheet
+    function sendToGoogleSheet(result) {
+      fetch("https://script.google.com/macros/s/AKfycbzB3U2BUrjVB3twfjY0LRLno5Wl1ljqo02youRDsuY0SEhIBXprTF_ics0GQd4lrdOnlQ/exec", {
         method: "POST",
-        mode: "no-cors",
+        mode: "no-cors", // Tránh lỗi CORS
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ choice }),
+        body: JSON.stringify({
+          ip: ipAddress,
+          result: result,
+          userAgent: navigator.userAgent,
+        }),
       });
-    };
+    }
 
-    let noClickCount = 0;
-    const noTexts = [
-      "Are you sure?",
-      "Really sure??",
-      "Are you positive?",
-      "Pookie please...",
-      "Just think about it!",
-      "If you say no, I will be really sad...",
-      "I will be very sad...",
-      "I will be very very sad..."
-    ];
+    // Lấy IP người dùng
+    let ipAddress = "unknown";
+    fetch("https://api.ipify.org?format=json")
+      .then(res => res.json())
+      .then(data => {
+        ipAddress = data.ip;
+        sendToGoogleSheet("visit"); // Gửi khi vừa truy cập
+      });
+
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const gif = document.getElementById("gif");
 
     yesBtn.addEventListener("click", () => {
-      sendChoice("Yes");
-      document.querySelector("h1").style.display = "none";
-      document.getElementById("buttons").style.display = "none";
-      document.getElementById("cat").style.display = "none";
-      document.getElementById("defaultGif").style.display = "none";
-
-      const yesGif = document.getElementById("yesGif");
-      yesGif.style.display = "block";
-      yesGif.style.marginTop = "10px";
-      yesGif.style.marginLeft = "auto";
-      yesGif.style.marginRight = "auto";
-
-      response.style.display = "block";
+      gif.src = "gift_yes.gif";
+      sendToGoogleSheet("yes");
     });
 
     noBtn.addEventListener("click", () => {
-      sendChoice("No");
-      noClickCount++;
-      if (noClickCount <= noTexts.length) {
-        noBtn.textContent = noTexts[noClickCount - 1];
-        yesBtn.style.transform = `scale(${1 + noClickCount * 0.2})`;
-        if (noClickCount === noTexts.length) {
-          noBtn.style.display = "none";
-        }
-      }
+      // Càng ấn nhiều, nút Yes sẽ to ra
+      const currentScale = parseFloat(getComputedStyle(yesBtn).transform.split(",")[0].replace("matrix(", "")) || 1;
+      const newScale = currentScale + 0.1;
+      yesBtn.style.transform = `scale(${newScale})`;
+      sendToGoogleSheet("no");
     });
   </script>
-
-<script>
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzB3U2BUrjVB3twfjY0LRLno5Wl1ljqo02youRDsuY0SEhIBXprTF_ics0GQd4lrdOnlQ/exec';
-
-  function getSessionId() {
-    let id = localStorage.getItem('sid');
-    if (!id) {
-      id = (crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).slice(2);
-      localStorage.setItem('sid', id);
-    }
-    return id;
-  }
-
-  function logToSheet(event, extra = {}) {
-    const payload = {
-      event,
-      sessionId: getSessionId(),
-      path: location.pathname + location.search,
-      referrer: document.referrer,
-      userAgent: navigator.userAgent,
-      extra
-    };
-
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      navigator.sendBeacon(WEB_APP_URL, blob);
-    } else {
-      fetch(WEB_APP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        keepalive: true,
-        mode: 'no-cors'
-      });
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    logToSheet('visit');
-  });
-
-  window.addEventListener('beforeunload', () => {
-    logToSheet('exit');
-  });
-
-  // Bạn có thể gọi logToSheet('choice', { choice: 'yes' }) khi bấm Yes
-</script>
-
 </body>
 </html>
