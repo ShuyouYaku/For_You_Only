@@ -1,64 +1,118 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>For You Only</title>
-    <style>
-      body {
-        background-color: black;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        margin: 0;
-      }
-      .button-container {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 20px;
-      }
-      .button {
-        background-color: white;
-        border: none;
-        padding: 15px 30px;
-        font-size: 18px;
-        cursor: pointer;
-      }
-      #gift {
-        display: block;
-        margin: 0 auto;
-        max-width: 100%;
-      }
-    </style>
-  </head>
-  <body>
-    <img id="gift" src="gift1.gif" />
-    <div class="button-container">
-      <button class="button" onclick="sendChoice('Yes')">Yes</button>
-      <button class="button" onclick="sendChoice('No')">No</button>
-      <button class="button" onclick="sendChoice('Are you sure?')">Are you sure?</button>
-    </div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Valentine</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      background-color: #fff0f5;
+      margin-top: 50px;
+    }
 
-    <script>
-      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzB3U2BUrjVB3twfjY0LRLno5Wl1ljqo02youRDsuY0SEhIBXprTF_ics0GQd4lrdOnlQ/exec";
+    .btn {
+      padding: 10px 20px;
+      font-size: 20px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: transform 0.3s ease;
+    }
 
-      // Gửi lựa chọn (GET method để tránh CORS)
-      function sendChoice(choice) {
-        const url = `${SCRIPT_URL}?Action=Choice&Choice=${encodeURIComponent(choice)}`;
-        fetch(url)
-          .then((response) => console.log("Logged:", choice))
-          .catch((error) => console.error("Logging failed:", error));
-      }
+    #yesBtn {
+      background-color: #ff69b4;
+      color: white;
+      transition: transform 0.3s ease-in-out;
+    }
 
-      // Gửi lượt truy cập khi mở trang (GET method)
-      window.addEventListener("load", () => {
-        const url = `${SCRIPT_URL}?Action=Visit`;
-        fetch(url)
-          .then(() => console.log("Visit logged"))
-          .catch((error) => console.error("Visit logging failed:", error));
+    #noBtn {
+      background-color: #ff4c4c;
+      color: white;
+    }
+
+    #response {
+      display: none;
+      margin-top: 10px;
+      font-size: 24px;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Do you want to be my Valentine?</h1>
+  <div id="buttons">
+    <button id="yesBtn" class="btn">Yes</button>
+    <button id="noBtn" class="btn">No</button>
+  </div>
+
+  <img id="cat" src="https://media.tenor.com/1q_L03jDdJYAAAAC/cute-cat.gif" alt="Cat Gif" width="200" />
+
+  <!-- GIFs -->
+  <img id="defaultGif" src="default.gif" alt="default gif" style="margin-top: 20px; width: 250px;" />
+  <img id="yesGif" src="yes.gif" alt="yes gif" style="margin-top: 20px; width: 300px; display: none;" />
+
+  <div id="response">
+    <h2>Knew you would say yes 💖</h2>
+  </div>
+
+  <script>
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const response = document.getElementById("response");
+
+    const sendChoice = (choice) => {
+      fetch("https://script.google.com/macros/s/AKfycbyqTRpy8sRfaHbyMJgshn6CxoRNE_uz9nlpxIQ6NtZEc2JDsnYfkzxKGED8L97xIMIS4w/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ choice }),
       });
-    </script>
-  </body>
+    };
+
+    let noClickCount = 0;
+    const noTexts = [
+      "Are you sure?",
+      "Really sure??",
+      "Are you positive?",
+      "Pookie please...",
+      "Just think about it!",
+      "If you say no, I will be really sad...",
+      "I will be very sad...",
+      "I will be very very sad..."
+    ];
+
+    yesBtn.addEventListener("click", () => {
+      sendChoice("Yes");
+      document.querySelector("h1").style.display = "none";
+      document.getElementById("buttons").style.display = "none";
+      document.getElementById("cat").style.display = "none";
+      document.getElementById("defaultGif").style.display = "none";
+
+      const yesGif = document.getElementById("yesGif");
+      yesGif.style.display = "block";
+      yesGif.style.marginTop = "10px";
+      yesGif.style.marginLeft = "auto";
+      yesGif.style.marginRight = "auto";
+
+      response.style.display = "block";
+    });
+
+    noBtn.addEventListener("click", () => {
+      sendChoice("No");
+      noClickCount++;
+      if (noClickCount <= noTexts.length) {
+        noBtn.textContent = noTexts[noClickCount - 1];
+        yesBtn.style.transform = `scale(${1 + noClickCount * 0.2})`;
+        if (noClickCount === noTexts.length) {
+          noBtn.style.display = "none";
+        }
+      }
+    });
+  </script>
+</body>
 </html>
