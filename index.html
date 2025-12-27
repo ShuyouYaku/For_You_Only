@@ -6,7 +6,10 @@
   <title>Valentine</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
-   body {
+   body.hidden {
+  visibility: hidden;
+  }
+  body {
   font-family: 'Press Start 2P', monospace;
   text-align: center;
   background-color: #fff0f5;
@@ -81,7 +84,7 @@
 
   </style>
 </head>
-<body>
+<body class="hidden">
   <h1>Do you want to be my Valentine?</h1>
  <div id="buttons">
   <button id="yesBtn" class="btn">Yes</button>
@@ -212,21 +215,36 @@ function handleReturningUser(choice) {
   const h1 = document.querySelector("h1");
   const buttons = document.getElementById("buttons");
   const cat = document.getElementById("cat");
-  const gif = document.getElementById("defaultGif");
-
+  const defaultGif = document.getElementById("defaultGif");
+  const yesGif = document.getElementById("yesGif");
+  const response = document.getElementById("response");
+  const noMessage = document.getElementById("noMessage");
+  if (h1) h1.style.display = "none";
+  if (buttons) buttons.style.display = "none";
+  if (cat) cat.style.display = "none";
+  if (defaultGif) defaultGif.style.display = "none";
+  if (yesGif) yesGif.style.display = "none";
+  if (response) response.style.display = "none";
   if (choice === "No") {
     document.body.style.backgroundColor = "black";
-    if (h1) h1.style.display = "none";
-    if (buttons) buttons.style.display = "none";
-    if (cat) cat.style.display = "none";
-    if (gif) gif.style.display = "none";
+    noMessage.style.display = "flex";
+
+    const mainText = noMessage.querySelector(".main-text");
+    const subText = noMessage.querySelector(".sub-text");
+
+    typeText(mainText, mainText.dataset.text, 50);
+    setTimeout(() => {
+      typeText(subText, subText.dataset.text, 40);
+    }, mainText.dataset.text.length * 60);
+
+    document.body.classList.remove("hidden");
     return;
   }
 
   if (choice === "Yes") {
-    if (h1) {
-      h1.textContent = "Do you want to change your mind?";
-    }
+    yesGif.style.display = "block";
+    response.style.display = "block";
+    document.body.classList.remove("hidden");
   }
 }
 function showSadYesMessage() {
@@ -248,11 +266,14 @@ function showBlackScreen() {
 }
 
  document.addEventListener('DOMContentLoaded', async () => {
-  await checkReturningUser();
+  const isReturning = await checkReturningUser();
+
+  if (!isReturning) {
+    document.body.classList.remove("hidden");
+  }
+
   logToSheet('visit');
 });
-
-
 
   window.addEventListener('beforeunload', () => {
     logToSheet('exit');
