@@ -4,18 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Valentine</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      background-color: #fff0f5;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-    }
+   body {
+  font-family: 'Press Start 2P', monospace;
+  text-align: center;
+  background-color: #fff0f5;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
+
 
     .btn {
       padding: 10px 20px;
@@ -44,15 +46,52 @@
       font-size: 24px;
       color: red;
     }
+#noMessage {
+  display: none;
+
+  position: fixed;
+  inset: 0;
+  background-color: black;
+  color: red;
+
+  font-family: 'Press Start 2P', monospace;
+
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+  padding: 5vh 6vw;
+  box-sizing: border-box;
+}
+#noMessage .main-text {
+  font-weight: 800;
+  font-size: min(16vw, 16vh);
+  line-height: 1.15;  
+}
+
+#noMessage .sub-text {
+  margin-top: 4vh;
+  font-size: clamp(16px, 4vw, 36px);
+  font-weight: 400;
+  color: #ffb3b3;
+  max-width: 90%;
+  line-height: 1.4;
+}
+
   </style>
 </head>
 <body>
   <h1>Do you want to be my Valentine?</h1>
-  <div id="buttons">
-    <button id="yesBtn" class="btn">Yes</button>
-    <button id="noBtn" class="btn">No</button>
-  </div>
+ <div id="buttons">
+  <button id="yesBtn" class="btn">Yes</button>
+  <button id="noBtn" class="btn">No</button>
+</div>
 
+<p id="noMessage">
+  <span class="main-text" data-text="Sorry for wasting your time."></span>
+  <span class="sub-text" data-text="I’m genuinely happy and thankful that I had the chance to know you. It helped me grow and improve myself. I hope you have a truly wonderful day!"></span>
+</p>
   <img id="cat" src="https://media.tenor.com/1q_L03jDdJYAAAAC/cute-cat.gif" alt="Cat Gif" width="200" />
 
   <!-- GIFs -->
@@ -64,70 +103,58 @@
   </div>
 
   <script>
+    let TYPE_SPEED = 100;
     const yesBtn = document.getElementById("yesBtn");
     const noBtn = document.getElementById("noBtn");
     const response = document.getElementById("response");
 
-    function sendChoice(choice) {
-  const payload = {
-    event: 'choice',
-    sessionId: getSessionId(),
-    path: location.pathname + location.search,
-    referrer: document.referrer,
-    userAgent: navigator.userAgent,
-    extra: { choice }
-  };
-
-  fetch(WEB_APP_URL, {
-    method: 'POST',
-    mode: 'no-cors', // ✅ Bắt buộc
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
-}
-
-
-    let noClickCount = 0;
-    const noTexts = [
-      "Are you sure?",
-      "Really sure??",
-      "Are you positive?",
-      "Pookie please...",
-      "Just think about it!",
-      "If you say no, I will be really sad...",
-      "I will be very sad...",
-      "I will be very very sad..."
-    ];
-
     yesBtn.addEventListener("click", () => {
-      sendChoice("Yes");
-      document.querySelector("h1").style.display = "none";
-      document.getElementById("buttons").style.display = "none";
-      document.getElementById("cat").style.display = "none";
-      document.getElementById("defaultGif").style.display = "none";
+  logToSheet("choice", { choice: "Yes" });
 
-      const yesGif = document.getElementById("yesGif");
-      yesGif.style.display = "block";
-      yesGif.style.marginTop = "10px";
-      yesGif.style.marginLeft = "auto";
-      yesGif.style.marginRight = "auto";
+  document.querySelector("h1").style.display = "none";
+  document.getElementById("buttons").style.display = "none";
+  document.getElementById("cat").style.display = "none";
+  document.getElementById("defaultGif").style.display = "none";
 
-      response.style.display = "block";
-    });
+  const yesGif = document.getElementById("yesGif");
+  yesGif.style.display = "block";
+  yesGif.style.marginTop = "10px";
+  yesGif.style.marginLeft = "auto";
+  yesGif.style.marginRight = "auto";
 
-    noBtn.addEventListener("click", () => {
-      sendChoice("No");
-      noClickCount++;
-      if (noClickCount <= noTexts.length) {
-        noBtn.textContent = noTexts[noClickCount - 1];
-        yesBtn.style.transform = `scale(${1 + noClickCount * 0.2})`;
-        if (noClickCount === noTexts.length) {
-          noBtn.style.display = "none";
-        }
-      }
-    });
+  response.style.display = "block";
+});
+
+
+ noBtn.addEventListener("click", () => {
+  logToSheet("choice", { choice: "No" });
+
+  document.querySelector("h1").style.display = "none";
+  document.getElementById("buttons").style.display = "none";
+  document.getElementById("cat").style.display = "none";
+  document.getElementById("defaultGif").style.display = "none";
+
+  document.body.style.backgroundColor = "black";
+
+  const noMessage = document.getElementById("noMessage");
+  noMessage.style.display = "flex";
+
+  const mainText = noMessage.querySelector(".main-text");
+  const subText = noMessage.querySelector(".sub-text");
+
+  const main = mainText.dataset.text;
+  const sub = subText.dataset.text;
+
+  typeText(mainText, main, 50, 80);
+
+setTimeout(() => {
+  typeText(subText, sub, 40, 70);
+}, main.length * 60);
+
+});
+
+
+
   </script>
 
 <script>
@@ -165,17 +192,89 @@
       });
     }
   }
+async function checkReturningUser() {
+  const sid = getSessionId();
 
-  document.addEventListener('DOMContentLoaded', () => {
-    logToSheet('visit');
-  });
+  try {
+    const res = await fetch(`${WEB_APP_URL}?sid=${sid}`);
+    const data = await res.json();
+
+    if (data.status === "returning") {
+      handleReturningUser(data.choice);
+      return true;
+    }
+  } catch (e) {}
+
+  return false;
+}
+
+function handleReturningUser(choice) {
+  const h1 = document.querySelector("h1");
+  const buttons = document.getElementById("buttons");
+  const cat = document.getElementById("cat");
+  const gif = document.getElementById("defaultGif");
+
+  if (choice === "No") {
+    document.body.style.backgroundColor = "black";
+    if (h1) h1.style.display = "none";
+    if (buttons) buttons.style.display = "none";
+    if (cat) cat.style.display = "none";
+    if (gif) gif.style.display = "none";
+    return;
+  }
+
+  if (choice === "Yes") {
+    if (h1) {
+      h1.textContent = "Do you want to change your mind?";
+    }
+  }
+}
+function showSadYesMessage() {
+  document.body.style.backgroundColor = "black";
+
+  const msg = document.createElement("div");
+  msg.style.color = "red";
+  msg.style.fontFamily = "'Press Start 2P', monospace";
+  msg.style.fontSize = "clamp(14px, 3vw, 26px)";
+  msg.style.textAlign = "center";
+  msg.style.padding = "10vh 8vw";
+
+  msg.textContent = "Do you want to change your mind?";
+
+  document.body.appendChild(msg);
+}
+function showBlackScreen() {
+  document.body.style.backgroundColor = "black";
+}
+
+ document.addEventListener('DOMContentLoaded', async () => {
+  await checkReturningUser();
+  logToSheet('visit');
+});
+
+
 
   window.addEventListener('beforeunload', () => {
     logToSheet('exit');
   });
+function typeText(element, text, variance = 20) {
+  element.textContent = "";
+  let i = 0;
 
-  // Bạn có thể gọi logToSheet('choice', { choice: 'yes' }) khi bấm Yes
+  function typeNext() {
+    if (i < text.length) {
+      element.textContent += text[i];
+      i++;
+
+      const delay =
+        TYPE_SPEED + Math.random() * variance;
+
+      setTimeout(typeNext, delay);
+    }
+  }
+
+  typeNext();
+}
 </script>
-
 </body>
 </html>
