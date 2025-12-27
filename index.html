@@ -85,11 +85,87 @@
   </style>
 </head>
 <body class="hidden">
+<script>
+let TYPE_SPEED = 100;
+function typeText(element, text, variance = 20) {
+  element.textContent = "";
+  let i = 0;
+
+  function typeNext() {
+    if (i < text.length) {
+      element.textContent += text[i];
+      i++;
+
+      const delay =
+        TYPE_SPEED + Math.random() * variance;
+
+      setTimeout(typeNext, delay);
+    }
+  }
+
+  typeNext();
+}
+
+function handleResponse(data) {
+  console.log("RETURN DATA:", data);
+
+  if (data.status !== "returning") return;
+
+  document.querySelector("h1").style.display = "none";
+  document.getElementById("buttons").style.display = "none";
+  document.getElementById("cat").style.display = "none";
+  document.getElementById("defaultGif").style.display = "none";
+
+  if (data.choice === "No") {
+    document.body.style.backgroundColor = "black";
+
+    const noMessage = document.getElementById("noMessage");
+    noMessage.style.display = "flex";
+
+    const mainText = noMessage.querySelector(".main-text");
+    const subText = noMessage.querySelector(".sub-text");
+
+    typeText(mainText, mainText.dataset.text, 50);
+    setTimeout(() => {
+      typeText(subText, subText.dataset.text, 40);
+    }, mainText.dataset.text.length * 60);
+  }
+
+ if (data.choice === "Yes") {
+  document.getElementById("defaultGif").style.display = "none";
+  document.getElementById("yesGif").style.display = "block";
+  document.getElementById("response").style.display = "block";
+}
+}
+
+const sid = localStorage.getItem("sid") || (() => {
+  const id =
+    (crypto.randomUUID && crypto.randomUUID()) ||
+    Math.random().toString(36).slice(2);
+  localStorage.setItem("sid", id);
+  return id;
+})();
+
+const script = document.createElement("script");
+script.src =
+  "https://script.google.com/macros/s/AKfycbx_pdCgUSHLm9mX3zq_rwbp5g7sKynGxgPLNcWxHoPFO-3HEZ2LjVdUZX2TTkgOB5ECZg/exec" +
+  "?sid=" + sid +
+  "&callback=handleResponse";
+
+document.body.appendChild(script);
+setTimeout(() => {
+  document.body.classList.remove("hidden");
+}, 2000);
+
+</script>
+
+
   <h1>Do you want to be my Valentine?</h1>
  <div id="buttons">
   <button id="yesBtn" class="btn">Yes</button>
   <button id="noBtn" class="btn">No</button>
 </div>
+
 
 <p id="noMessage">
   <span class="main-text" data-text="Sorry for wasting your time."></span>
@@ -106,7 +182,6 @@
   </div>
 
   <script>
-    let TYPE_SPEED = 100;
     const yesBtn = document.getElementById("yesBtn");
     const noBtn = document.getElementById("noBtn");
     const response = document.getElementById("response");
@@ -195,58 +270,7 @@ setTimeout(() => {
       });
     }
   }
-async function checkReturningUser() {
-  const sid = getSessionId();
-
-  try {
-    const res = await fetch(`${WEB_APP_URL}?sid=${sid}`);
-    const data = await res.json();
-
-    if (data.status === "returning") {
-      handleReturningUser(data.choice);
-      return true;
-    }
-  } catch (e) {}
-
-  return false;
-}
-
-function handleReturningUser(choice) {
-  const h1 = document.querySelector("h1");
-  const buttons = document.getElementById("buttons");
-  const cat = document.getElementById("cat");
-  const defaultGif = document.getElementById("defaultGif");
-  const yesGif = document.getElementById("yesGif");
-  const response = document.getElementById("response");
-  const noMessage = document.getElementById("noMessage");
-  if (h1) h1.style.display = "none";
-  if (buttons) buttons.style.display = "none";
-  if (cat) cat.style.display = "none";
-  if (defaultGif) defaultGif.style.display = "none";
-  if (yesGif) yesGif.style.display = "none";
-  if (response) response.style.display = "none";
-  if (choice === "No") {
-    document.body.style.backgroundColor = "black";
-    noMessage.style.display = "flex";
-
-    const mainText = noMessage.querySelector(".main-text");
-    const subText = noMessage.querySelector(".sub-text");
-
-    typeText(mainText, mainText.dataset.text, 50);
-    setTimeout(() => {
-      typeText(subText, subText.dataset.text, 40);
-    }, mainText.dataset.text.length * 60);
-
-    document.body.classList.remove("hidden");
-    return;
-  }
-
-  if (choice === "Yes") {
-    yesGif.style.display = "block";
-    response.style.display = "block";
-    document.body.classList.remove("hidden");
-  }
-}
+  
 function showSadYesMessage() {
   document.body.style.backgroundColor = "black";
 
@@ -265,37 +289,10 @@ function showBlackScreen() {
   document.body.style.backgroundColor = "black";
 }
 
- document.addEventListener('DOMContentLoaded', async () => {
-  const isReturning = await checkReturningUser();
-
-  if (!isReturning) {
-    document.body.classList.remove("hidden");
-  }
-
-  logToSheet('visit');
-});
-
+ 
   window.addEventListener('beforeunload', () => {
     logToSheet('exit');
   });
-function typeText(element, text, variance = 20) {
-  element.textContent = "";
-  let i = 0;
-
-  function typeNext() {
-    if (i < text.length) {
-      element.textContent += text[i];
-      i++;
-
-      const delay =
-        TYPE_SPEED + Math.random() * variance;
-
-      setTimeout(typeNext, delay);
-    }
-  }
-
-  typeNext();
-}
 </script>
 </body>
 </html>
