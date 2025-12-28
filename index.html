@@ -7,8 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
-body.hidden { visibility: hidden; }
-
 body {
   font-family: 'Press Start 2P', monospace;
   text-align: center;
@@ -28,18 +26,10 @@ body {
   cursor: pointer;
   border: none;
   border-radius: 5px;
-  transition: transform 0.3s ease;
 }
 
-#yesBtn {
-  background-color: #ff69b4;
-  color: white;
-}
-
-#noBtn {
-  background-color: #ff4c4c;
-  color: white;
-}
+#yesBtn { background-color: #ff69b4; color: white; }
+#noBtn  { background-color: #ff4c4c; color: white; }
 
 #response {
   display: none;
@@ -54,18 +44,15 @@ body {
   inset: 0;
   background-color: black;
   color: red;
-  font-family: 'Press Start 2P', monospace;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  text-align: center;
   padding: 5vh 6vw;
-  box-sizing: border-box;
 }
 
 #noMessage .main-text {
-  font-weight: 800;
   font-size: min(16vw, 16vh);
+  font-weight: 800;
 }
 
 #noMessage .sub-text {
@@ -77,26 +64,28 @@ body {
 </head>
 
 <body>
+
 <script>
+/* SID – chỉ dùng định danh */
 const sid = localStorage.getItem("sid") || (() => {
   const id = crypto.randomUUID?.() || Math.random().toString(36).slice(2);
   localStorage.setItem("sid", id);
   return id;
 })();
 </script>
+
 <script>
 let TYPE_SPEED = 100;
 
 function typeText(el, text, variance = 20) {
   el.textContent = "";
   let i = 0;
-  function tick() {
+  (function tick() {
     if (i < text.length) {
       el.textContent += text[i++];
       setTimeout(tick, TYPE_SPEED + Math.random() * variance);
     }
-  }
-  tick();
+  })();
 }
 
 function clearUI() {
@@ -115,7 +104,6 @@ function showYes() {
 function showNo() {
   clearUI();
   document.body.style.backgroundColor = "black";
-
   const box = document.getElementById("noMessage");
   box.style.display = "flex";
 
@@ -127,30 +115,22 @@ function showNo() {
     typeText(box.querySelector(".sub-text"), sub, 40);
   }, main.length * 60);
 }
-document.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("finalChoice");
-  if (saved === "Yes") showYes();
-  if (saved === "No") showNo();
-});
 
+/* JSONP callback từ doGet */
 function handleResponse(data) {
   if (!data || data.status !== "returning") return;
-
-  localStorage.setItem("finalChoice", data.choice);
-
-  if (data.choice === "Yes") showYes();
-  if (data.choice === "No") showNo();
+  data.choice === "Yes" ? showYes() : showNo();
 }
 </script>
 
 <script>
+/* Load trạng thái từ Google Sheet */
 document.addEventListener("DOMContentLoaded", () => {
   const s = document.createElement("script");
   s.src =
-    "https://script.google.com/macros/s/AKfycbyhcLrMwzjRd1Os54LOwlxJcGAIOkTTfbqUoQI18yuXHlSC4TlRu534WppaP_ifnfDYog/exec" +
+    "https://script.google.com/macros/s/AKfycbxBK8lt08ygyKp2Ikr9GyZEXtNzNBN0JQcd3U1rQXhhuZgMWFPakLAf8BnFjuqWomL1Og/exec" +
     "?sid=" + sid +
     "&callback=handleResponse";
-
   document.body.appendChild(s);
 });
 </script>
@@ -176,41 +156,32 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 
 <script>
+const WEB_APP_URL =
+  "https://script.google.com/macros/s/AKfycbxBK8lt08ygyKp2Ikr9GyZEXtNzNBN0JQcd3U1rQXhhuZgMWFPakLAf8BnFjuqWomL1Og/exec";
+
+function sendChoice(choice) {
+  navigator.sendBeacon(
+    WEB_APP_URL,
+    new Blob([JSON.stringify({
+      sid,
+      choice,
+      userAgent: navigator.userAgent
+    })], { type: "application/json" })
+  );
+}
+
 const yesBtn = document.getElementById("yesBtn");
 const noBtn  = document.getElementById("noBtn");
 
 yesBtn.onclick = () => {
-  localStorage.setItem("finalChoice", "Yes");
-  logToSheet("choice", { choice: "Yes" });
+  sendChoice("Yes");
   showYes();
 };
 
 noBtn.onclick = () => {
-  localStorage.setItem("finalChoice", "No");
-  logToSheet("choice", { choice: "No" });
+  sendChoice("No");
   showNo();
 };
-</script>
-
-<script>
-const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbyhcLrMwzjRd1Os54LOwlxJcGAIOkTTfbqUoQI18yuXHlSC4TlRu534WppaP_ifnfDYog/exec";
-
-
-function logToSheet(event, extra = {}) {
-  const payload = {
-    event,
-    sessionId: sid,
-    path: location.pathname,
-    userAgent: navigator.userAgent,
-    extra
-  };
-
-  navigator.sendBeacon(
-    WEB_APP_URL,
-    new Blob([JSON.stringify(payload)], { type: "text/plain" })
-  );
-}
 </script>
 
 </body>
