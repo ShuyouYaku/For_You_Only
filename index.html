@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Valentine</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-  <style>
-   body.hidden {
-  visibility: hidden;
-  }
-  body {
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Valentine</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<style>
+body.hidden { visibility: hidden; }
+
+body {
   font-family: 'Press Start 2P', monospace;
   text-align: center;
   background-color: #fff0f5;
@@ -21,278 +21,197 @@
   flex-direction: column;
 }
 
+.btn {
+  padding: 10px 20px;
+  font-size: 20px;
+  margin: 10px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  transition: transform 0.3s ease;
+}
 
-    .btn {
-      padding: 10px 20px;
-      font-size: 20px;
-      margin: 10px;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      transition: transform 0.3s ease;
-    }
+#yesBtn {
+  background-color: #ff69b4;
+  color: white;
+}
 
-    #yesBtn {
-      background-color: #ff69b4;
-      color: white;
-      transition: transform 0.3s ease-in-out;
-    }
+#noBtn {
+  background-color: #ff4c4c;
+  color: white;
+}
 
-    #noBtn {
-      background-color: #ff4c4c;
-      color: white;
-    }
+#response {
+  display: none;
+  margin-top: 10px;
+  font-size: 24px;
+  color: red;
+}
 
-    #response {
-      display: none;
-      margin-top: 10px;
-      font-size: 24px;
-      color: red;
-    }
 #noMessage {
   display: none;
-
   position: fixed;
   inset: 0;
   background-color: black;
   color: red;
-
   font-family: 'Press Start 2P', monospace;
-
   flex-direction: column;
   justify-content: center;
   align-items: center;
-
   text-align: center;
   padding: 5vh 6vw;
   box-sizing: border-box;
 }
+
 #noMessage .main-text {
   font-weight: 800;
   font-size: min(16vw, 16vh);
-  line-height: 1.15;  
 }
 
 #noMessage .sub-text {
   margin-top: 4vh;
   font-size: clamp(16px, 4vw, 36px);
-  font-weight: 400;
   color: #ffb3b3;
-  max-width: 90%;
-  line-height: 1.4;
 }
-
-  </style>
+</style>
 </head>
-<body class="hidden">
+
+<body>
 <script>
-let TYPE_SPEED = 100;
-function typeText(element, text, variance = 20) {
-  element.textContent = "";
-  let i = 0;
-
-  function typeNext() {
-    if (i < text.length) {
-      element.textContent += text[i];
-      i++;
-
-      const delay =
-        TYPE_SPEED + Math.random() * variance;
-
-      setTimeout(typeNext, delay);
-    }
-  }
-
-  typeNext();
-}
-
-function handleResponse(data) {
-  console.log("RETURN DATA:", data);
-
-  if (data.status !== "returning") return;
-
-  document.querySelector("h1").style.display = "none";
-  document.getElementById("buttons").style.display = "none";
-  document.getElementById("cat").style.display = "none";
-  document.getElementById("defaultGif").style.display = "none";
-
-  if (data.choice === "No") {
-    document.body.style.backgroundColor = "black";
-
-    const noMessage = document.getElementById("noMessage");
-    noMessage.style.display = "flex";
-
-    const mainText = noMessage.querySelector(".main-text");
-    const subText = noMessage.querySelector(".sub-text");
-
-    typeText(mainText, mainText.dataset.text, 50);
-    setTimeout(() => {
-      typeText(subText, subText.dataset.text, 40);
-    }, mainText.dataset.text.length * 60);
-  }
-
- if (data.choice === "Yes") {
-  document.getElementById("defaultGif").style.display = "none";
-  document.getElementById("yesGif").style.display = "block";
-  document.getElementById("response").style.display = "block";
-}
-}
-
 const sid = localStorage.getItem("sid") || (() => {
-  const id =
-    (crypto.randomUUID && crypto.randomUUID()) ||
-    Math.random().toString(36).slice(2);
+  const id = crypto.randomUUID?.() || Math.random().toString(36).slice(2);
   localStorage.setItem("sid", id);
   return id;
 })();
+</script>
+<script>
+let TYPE_SPEED = 100;
 
-const script = document.createElement("script");
-script.src =
-  "https://script.google.com/macros/s/AKfycbx_pdCgUSHLm9mX3zq_rwbp5g7sKynGxgPLNcWxHoPFO-3HEZ2LjVdUZX2TTkgOB5ECZg/exec" +
-  "?sid=" + sid +
-  "&callback=handleResponse";
+function typeText(el, text, variance = 20) {
+  el.textContent = "";
+  let i = 0;
+  function tick() {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      setTimeout(tick, TYPE_SPEED + Math.random() * variance);
+    }
+  }
+  tick();
+}
 
-document.body.appendChild(script);
-setTimeout(() => {
-  document.body.classList.remove("hidden");
-}, 2000);
+function clearUI() {
+  document.querySelector("h1")?.remove();
+  document.getElementById("buttons")?.remove();
+  document.getElementById("cat")?.remove();
+  document.getElementById("defaultGif")?.remove();
+}
 
+function showYes() {
+  clearUI();
+  document.getElementById("yesGif").style.display = "block";
+  document.getElementById("response").style.display = "block";
+}
+
+function showNo() {
+  clearUI();
+  document.body.style.backgroundColor = "black";
+
+  const box = document.getElementById("noMessage");
+  box.style.display = "flex";
+
+  const main = box.querySelector(".main-text").dataset.text;
+  const sub  = box.querySelector(".sub-text").dataset.text;
+
+  typeText(box.querySelector(".main-text"), main, 50);
+  setTimeout(() => {
+    typeText(box.querySelector(".sub-text"), sub, 40);
+  }, main.length * 60);
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("finalChoice");
+  if (saved === "Yes") showYes();
+  if (saved === "No") showNo();
+});
+
+function handleResponse(data) {
+  if (!data || data.status !== "returning") return;
+
+  localStorage.setItem("finalChoice", data.choice);
+
+  if (data.choice === "Yes") showYes();
+  if (data.choice === "No") showNo();
+}
 </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const s = document.createElement("script");
+  s.src =
+    "https://script.google.com/macros/s/AKfycbyhcLrMwzjRd1Os54LOwlxJcGAIOkTTfbqUoQI18yuXHlSC4TlRu534WppaP_ifnfDYog/exec" +
+    "?sid=" + sid +
+    "&callback=handleResponse";
 
-  <h1>Do you want to be my Valentine?</h1>
- <div id="buttons">
+  document.body.appendChild(s);
+});
+</script>
+
+<h1>Do you want to be my Valentine?</h1>
+
+<div id="buttons">
   <button id="yesBtn" class="btn">Yes</button>
   <button id="noBtn" class="btn">No</button>
 </div>
 
-
-<p id="noMessage">
+<div id="noMessage">
   <span class="main-text" data-text="Sorry for wasting your time."></span>
   <span class="sub-text" data-text="I’m genuinely happy and thankful that I had the chance to know you. It helped me grow and improve myself. I hope you have a truly wonderful day!"></span>
-</p>
-  <img id="cat" src="https://media.tenor.com/1q_L03jDdJYAAAAC/cute-cat.gif" alt="Cat Gif" width="200" />
+</div>
 
-  <!-- GIFs -->
-  <img id="defaultGif" src="default.gif" alt="default gif" style="margin-top: 20px; width: 250px;" />
-  <img id="yesGif" src="yes.gif" alt="yes gif" style="margin-top: 20px; width: 300px; display: none;" />
+<img id="cat" src="https://media.tenor.com/1q_L03jDdJYAAAAC/cute-cat.gif" width="200" />
+<img id="defaultGif" src="default.gif" width="250" />
+<img id="yesGif" src="yes.gif" width="300" style="display:none" />
 
-  <div id="response">
-    <h2>Knew you would say yes 💖</h2>
-  </div>
-
-  <script>
-    const yesBtn = document.getElementById("yesBtn");
-    const noBtn = document.getElementById("noBtn");
-    const response = document.getElementById("response");
-
-    yesBtn.addEventListener("click", () => {
-  logToSheet("choice", { choice: "Yes" });
-
-  document.querySelector("h1").style.display = "none";
-  document.getElementById("buttons").style.display = "none";
-  document.getElementById("cat").style.display = "none";
-  document.getElementById("defaultGif").style.display = "none";
-
-  const yesGif = document.getElementById("yesGif");
-  yesGif.style.display = "block";
-  yesGif.style.marginTop = "10px";
-  yesGif.style.marginLeft = "auto";
-  yesGif.style.marginRight = "auto";
-
-  response.style.display = "block";
-});
-
-
- noBtn.addEventListener("click", () => {
-  logToSheet("choice", { choice: "No" });
-
-  document.querySelector("h1").style.display = "none";
-  document.getElementById("buttons").style.display = "none";
-  document.getElementById("cat").style.display = "none";
-  document.getElementById("defaultGif").style.display = "none";
-
-  document.body.style.backgroundColor = "black";
-
-  const noMessage = document.getElementById("noMessage");
-  noMessage.style.display = "flex";
-
-  const mainText = noMessage.querySelector(".main-text");
-  const subText = noMessage.querySelector(".sub-text");
-
-  const main = mainText.dataset.text;
-  const sub = subText.dataset.text;
-
-  typeText(mainText, main, 50, 80);
-
-setTimeout(() => {
-  typeText(subText, sub, 40, 70);
-}, main.length * 60);
-
-});
-
-
-
-  </script>
+<div id="response">
+  <h2>Knew you would say yes 💖</h2>
+</div>
 
 <script>
-  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_pdCgUSHLm9mX3zq_rwbp5g7sKynGxgPLNcWxHoPFO-3HEZ2LjVdUZX2TTkgOB5ECZg/exec';
+const yesBtn = document.getElementById("yesBtn");
+const noBtn  = document.getElementById("noBtn");
 
-  function getSessionId() {
-    let id = localStorage.getItem('sid');
-    if (!id) {
-      id = (crypto.randomUUID && crypto.randomUUID()) || Math.random().toString(36).slice(2);
-      localStorage.setItem('sid', id);
-    }
-    return id;
-  }
+yesBtn.onclick = () => {
+  localStorage.setItem("finalChoice", "Yes");
+  logToSheet("choice", { choice: "Yes" });
+  showYes();
+};
 
-  function logToSheet(event, extra = {}) {
-    const payload = {
-      event,
-      sessionId: getSessionId(),
-      path: location.pathname + location.search,
-      referrer: document.referrer,
-      userAgent: navigator.userAgent,
-      extra
-    };
-
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
-      navigator.sendBeacon(WEB_APP_URL, blob);
-    } else {
-      fetch(WEB_APP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        keepalive: true,
-        mode: 'no-cors'
-      });
-    }
-  }
-  
-function showSadYesMessage() {
-  document.body.style.backgroundColor = "black";
-
-  const msg = document.createElement("div");
-  msg.style.color = "red";
-  msg.style.fontFamily = "'Press Start 2P', monospace";
-  msg.style.fontSize = "clamp(14px, 3vw, 26px)";
-  msg.style.textAlign = "center";
-  msg.style.padding = "10vh 8vw";
-
-  msg.textContent = "Do you want to change your mind?";
-
-  document.body.appendChild(msg);
-}
-function showBlackScreen() {
-  document.body.style.backgroundColor = "black";
-}
-
- 
-  window.addEventListener('beforeunload', () => {
-    logToSheet('exit');
-  });
+noBtn.onclick = () => {
+  localStorage.setItem("finalChoice", "No");
+  logToSheet("choice", { choice: "No" });
+  showNo();
+};
 </script>
+
+<script>
+const WEB_APP_URL =
+  "https://script.google.com/macros/s/AKfycbyhcLrMwzjRd1Os54LOwlxJcGAIOkTTfbqUoQI18yuXHlSC4TlRu534WppaP_ifnfDYog/exec";
+
+
+function logToSheet(event, extra = {}) {
+  const payload = {
+    event,
+    sessionId: sid,
+    path: location.pathname,
+    userAgent: navigator.userAgent,
+    extra
+  };
+
+  navigator.sendBeacon(
+    WEB_APP_URL,
+    new Blob([JSON.stringify(payload)], { type: "text/plain" })
+  );
+}
+</script>
+
 </body>
 </html>
