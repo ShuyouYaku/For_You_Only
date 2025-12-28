@@ -1,188 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Valentine</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Valentine</title>
 
-<style>
-body {
-  font-family: 'Press Start 2P', monospace;
-  text-align: center;
-  background-color: #fff0f5;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  flex-direction: column;
-}
+  <link
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+    rel="stylesheet"
+  />
 
-.btn {
-  padding: 10px 20px;
-  font-size: 20px;
-  margin: 10px;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
-}
+  <style>
+    body {
+      font-family: 'Press Start 2P', monospace;
+      text-align: center;
+      background-color: #fff0f5;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
 
-#yesBtn { background-color: #ff69b4; color: white; }
-#noBtn  { background-color: #ff4c4c; color: white; }
+    .btn {
+      padding: 10px 20px;
+      font-size: 20px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: transform 0.3s ease;
+    }
 
-#response {
-  display: none;
-  margin-top: 10px;
-  font-size: 24px;
-  color: red;
-}
+    #yesBtn {
+      background-color: #ff69b4;
+      color: white;
+      transition: transform 0.3s ease-in-out;
+    }
 
-#noMessage {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background-color: black;
-  color: red;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 5vh 6vw;
-}
+    #noBtn {
+      background-color: #ff4c4c;
+      color: white;
+    }
 
-#noMessage .main-text {
-  font-size: min(16vw, 16vh);
-  font-weight: 800;
-}
+    #response {
+      display: none;
+      margin-top: 10px;
+      font-size: 24px;
+      color: red;
+    }
 
-#noMessage .sub-text {
-  margin-top: 4vh;
-  font-size: clamp(16px, 4vw, 36px);
-  color: #ffb3b3;
-}
-</style>
+    #noMessage {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: black;
+      color: red;
+      font-family: 'Press Start 2P', monospace;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 5vh 6vw;
+      box-sizing: border-box;
+    }
+
+    #noMessage .main-text {
+      font-weight: 800;
+      font-size: min(16vw, 16vh);
+      line-height: 1.15;
+    }
+
+    #noMessage .sub-text {
+      margin-top: 4vh;
+      font-size: clamp(16px, 4vw, 36px);
+      font-weight: 400;
+      color: #ffb3b3;
+      max-width: 90%;
+      line-height: 1.4;
+    }
+  </style>
 </head>
 
 <body>
+  <h1>Do you want to be my Valentine?</h1>
 
-<script>
-/* SID – chỉ dùng định danh */
-const sid = localStorage.getItem("sid") || (() => {
-  const id = crypto.randomUUID?.() || Math.random().toString(36).slice(2);
-  localStorage.setItem("sid", id);
-  return id;
-})();
-</script>
+  <div id="buttons">
+    <button id="yesBtn" class="btn">Yes</button>
+    <button id="noBtn" class="btn">No</button>
+  </div>
 
-<script>
-let TYPE_SPEED = 100;
+  <p id="noMessage">
+    <span
+      class="main-text"
+      data-text="Sorry for wasting your time."
+    ></span>
+    <span
+      class="sub-text"
+      data-text="I’m genuinely happy and thankful that I had the chance to know you. It helped me grow and improve myself. I hope you have a truly wonderful day!"
+    ></span>
+  </p>
 
-function typeText(el, text, variance = 20) {
-  el.textContent = "";
-  let i = 0;
-  (function tick() {
-    if (i < text.length) {
-      el.textContent += text[i++];
-      setTimeout(tick, TYPE_SPEED + Math.random() * variance);
+  <img
+    id="cat"
+    src="https://media.tenor.com/1q_L03jDdJYAAAAC/cute-cat.gif"
+    alt="Cat Gif"
+    width="200"
+  />
+
+  <!-- GIFs -->
+  <img
+    id="defaultGif"
+    src="default.gif"
+    alt="default gif"
+    style="margin-top: 20px; width: 250px;"
+  />
+  <img
+    id="yesGif"
+    src="yes.gif"
+    alt="yes gif"
+    style="margin-top: 20px; width: 300px; display: none;"
+  />
+
+  <div id="response">
+    <h2>Knew you would say yes 💖</h2>
+  </div>
+
+  <script>
+    let TYPE_SPEED = 100;
+
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const response = document.getElementById("response");
+
+    function sendChoice(choice) {
+      const payload = {
+        event: 'choice',
+        sessionId: getSessionId(),
+        path: location.pathname + location.search,
+        referrer: document.referrer,
+        userAgent: navigator.userAgent,
+        extra: { choice }
+      };
+
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
     }
-  })();
-}
 
-function clearUI() {
-  document.querySelector("h1")?.remove();
-  document.getElementById("buttons")?.remove();
-  document.getElementById("cat")?.remove();
-  document.getElementById("defaultGif")?.remove();
-}
+    yesBtn.addEventListener("click", () => {
+      sendChoice("Yes");
+      document.querySelector("h1").style.display = "none";
+      document.getElementById("buttons").style.display = "none";
+      document.getElementById("cat").style.display = "none";
+      document.getElementById("defaultGif").style.display = "none";
 
-function showYes() {
-  clearUI();
-  document.getElementById("yesGif").style.display = "block";
-  document.getElementById("response").style.display = "block";
-}
+      const yesGif = document.getElementById("yesGif");
+      yesGif.style.display = "block";
+      yesGif.style.marginTop = "10px";
+      yesGif.style.marginLeft = "auto";
+      yesGif.style.marginRight = "auto";
 
-function showNo() {
-  clearUI();
-  document.body.style.backgroundColor = "black";
-  const box = document.getElementById("noMessage");
-  box.style.display = "flex";
+      response.style.display = "block";
+    });
 
-  const main = box.querySelector(".main-text").dataset.text;
-  const sub  = box.querySelector(".sub-text").dataset.text;
+    noBtn.addEventListener("click", () => {
+      sendChoice("No");
+      document.querySelector("h1").style.display = "none";
+      document.getElementById("buttons").style.display = "none";
+      document.getElementById("cat").style.display = "none";
+      document.getElementById("defaultGif").style.display = "none";
+      document.body.style.backgroundColor = "black";
 
-  typeText(box.querySelector(".main-text"), main, 50);
-  setTimeout(() => {
-    typeText(box.querySelector(".sub-text"), sub, 40);
-  }, main.length * 60);
-}
+      const noMessage = document.getElementById("noMessage");
+      noMessage.style.display = "flex";
 
-/* JSONP callback từ doGet */
-function handleResponse(data) {
-  if (!data || data.status !== "returning") return;
-  data.choice === "Yes" ? showYes() : showNo();
-}
-</script>
+      const mainText = noMessage.querySelector(".main-text");
+      const subText = noMessage.querySelector(".sub-text");
 
-<script>
-/* Load trạng thái từ Google Sheet */
-document.addEventListener("DOMContentLoaded", () => {
-  const s = document.createElement("script");
-  s.src =
-    "https://script.google.com/macros/s/AKfycbxBK8lt08ygyKp2Ikr9GyZEXtNzNBN0JQcd3U1rQXhhuZgMWFPakLAf8BnFjuqWomL1Og/exec" +
-    "?sid=" + sid +
-    "&callback=handleResponse";
-  document.body.appendChild(s);
-});
-</script>
+      const main = mainText.dataset.text;
+      const sub = subText.dataset.text;
 
-<h1>Do you want to be my Valentine?</h1>
+      typeText(mainText, main, 50, 80);
+      setTimeout(() => {
+        typeText(subText, sub, 40, 70);
+      }, main.length * 60);
+    });
+  </script>
 
-<div id="buttons">
-  <button id="yesBtn" class="btn">Yes</button>
-  <button id="noBtn" class="btn">No</button>
-</div>
+  <script>
+    const WEB_APP_URL =
+      'https://script.google.com/macros/s/AKfycbx_pdCgUSHLm9mX3zq_rwbp5g7sKynGxgPLNcWxHoPFO-3HEZ2LjVdUZX2TTkgOB5ECZg/exec';
 
-<div id="noMessage">
-  <span class="main-text" data-text="Sorry for wasting your time."></span>
-  <span class="sub-text" data-text="I’m genuinely happy and thankful that I had the chance to know you. It helped me grow and improve myself. I hope you have a truly wonderful day!"></span>
-</div>
+    function getSessionId() {
+      let id = localStorage.getItem('sid');
+      if (!id) {
+        id =
+          (crypto.randomUUID && crypto.randomUUID()) ||
+          Math.random().toString(36).slice(2);
+        localStorage.setItem('sid', id);
+      }
+      return id;
+    }
 
-<img id="cat" src="https://media.tenor.com/1q_L03jDdJYAAAAC/cute-cat.gif" width="200" />
-<img id="defaultGif" src="default.gif" width="250" />
-<img id="yesGif" src="yes.gif" width="300" style="display:none" />
+    function logToSheet(event, extra = {}) {
+      const payload = {
+        event,
+        sessionId: getSessionId(),
+        path: location.pathname + location.search,
+        referrer: document.referrer,
+        userAgent: navigator.userAgent,
+        extra
+      };
 
-<div id="response">
-  <h2>Knew you would say yes 💖</h2>
-</div>
+      if (navigator.sendBeacon) {
+        const blob = new Blob([JSON.stringify(payload)], {
+          type: 'text/plain'
+        });
+        navigator.sendBeacon(WEB_APP_URL, blob);
+      } else {
+        fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true,
+          mode: 'no-cors'
+        });
+      }
+    }
 
-<script>
-const WEB_APP_URL =
-  "https://script.google.com/macros/s/AKfycbxBK8lt08ygyKp2Ikr9GyZEXtNzNBN0JQcd3U1rQXhhuZgMWFPakLAf8BnFjuqWomL1Og/exec";
+    document.addEventListener('DOMContentLoaded', () => {
+      logToSheet('visit');
+    });
 
-function sendChoice(choice) {
-  navigator.sendBeacon(
-    WEB_APP_URL,
-    new Blob([JSON.stringify({
-      sid,
-      choice,
-      userAgent: navigator.userAgent
-    })], { type: "application/json" })
-  );
-}
+    window.addEventListener('beforeunload', () => {
+      logToSheet('exit');
+    });
 
-const yesBtn = document.getElementById("yesBtn");
-const noBtn  = document.getElementById("noBtn");
+    function typeText(element, text, variance = 20) {
+      element.textContent = "";
+      let i = 0;
 
-yesBtn.onclick = () => {
-  sendChoice("Yes");
-  showYes();
-};
+      function typeNext() {
+        if (i < text.length) {
+          element.textContent += text[i];
+          i++;
+          const delay = TYPE_SPEED + Math.random() * variance;
+          setTimeout(typeNext, delay);
+        }
+      }
 
-noBtn.onclick = () => {
-  sendChoice("No");
-  showNo();
-};
-</script>
-
+      typeNext();
+    }
+  </script>
 </body>
 </html>
